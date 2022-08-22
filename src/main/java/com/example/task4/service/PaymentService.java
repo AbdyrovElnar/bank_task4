@@ -134,23 +134,22 @@ public class PaymentService {
 
             FileReader filereader = new FileReader(file.getOriginalFilename());
             CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
-            CSVReader csvReaderAnother = new CSVReader(filereader);
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
 
             List<String[]> allData = csvReader.readAll();
 
-int index = 0;
+            int index = 0;
 
             for (String[] row : allData) {
                 PaymentCsv payment = new PaymentCsv();
                 int j = 0;
-                if(index > 1){
+                if (index > 1) {
                     for (String cell : row) {
-                        switch (j){
+                        switch (j) {
                             case 0:
-                               payment.setTransactionId(cell);
+                                payment.setTransactionId(cell);
                                 break;
                             case 1:
                                 payment.setDate(LocalDateTime.parse(cell, formatter));
