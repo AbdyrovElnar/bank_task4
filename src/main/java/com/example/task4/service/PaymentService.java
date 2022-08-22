@@ -1,7 +1,13 @@
 package com.example.task4.service;
 
+import com.example.task4.dto.PaymentCsvDTO;
 import com.example.task4.dto.PaymentDTO;
 import com.example.task4.entity.Payment;
+import com.example.task4.entity.PaymentCsv;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -11,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -66,18 +73,18 @@ public class PaymentService {
                             payment.setProps(checkFormat(cell, cellType));
                             break;
                         case 6:
-                            if (cell.getNumericCellValue()>0) {
+                            if (cell.getNumericCellValue() > 0) {
                                 payment.setSum(Integer.parseInt(checkFormat(cell, cellType)));
                                 break;
                             }
                         case 7:
-                            if (cell.getNumericCellValue()>0) {
+                            if (cell.getNumericCellValue() > 0) {
                                 payment.setAgentCommision(Integer.parseInt(checkFormat(cell, cellType)));
                                 break;
                             }
 
                         case 8:
-                            if (cell.getNumericCellValue()>0) {
+                            if (cell.getNumericCellValue() > 0) {
                                 payment.setCompanyCommision(Integer.parseInt(checkFormat(cell, cellType)));
                                 break;
                             }
@@ -118,5 +125,55 @@ public class PaymentService {
                 break;
         }
         return "";
+    }
+
+    public List<PaymentCsvDTO> readCsvFile(MultipartFile file) {
+        List<PaymentCsvDTO> paymentList = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy H:mm");
+        try {
+
+            FileReader filereader = new FileReader(file.getOriginalFilename());
+            CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
+            CSVReader csvReaderAnother = new CSVReader(filereader);
+            CSVReader csvReader = new CSVReaderBuilder(filereader)
+                    .withCSVParser(parser)
+                    .build();
+
+            List<String[]> allData = csvReader.readAll();
+
+int index = 0;
+
+            for (String[] row : allData) {
+                PaymentCsv payment = new PaymentCsv();
+                int j = 0;
+                if(index > 1){
+                    for (String cell : row) {
+                        switch (j){
+                            case 0:
+                               payment.setTransactionId(cell);
+                                break;
+                            case 1:
+                                payment.setDate(LocalDateTime.parse(cell, formatter));
+                                break;
+                            case 2:
+                                payment.setUserNumber(cell);
+                                break;
+                            case 3:
+                                payment.setSum(Double.parseDouble(cell));
+                                break;
+                        }
+                        j++;
+                    }
+                    paymentList.add(PaymentCsvDTO.from(payment));
+
+                }
+                index++;
+
+                System.out.println();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return paymentList;
     }
 }
